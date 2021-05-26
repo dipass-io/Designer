@@ -1,0 +1,189 @@
+
+
+entity BankAccount {
+
+accountsId String required
+accountsAlias String required
+accountsType String required
+accountsDescription String required
+accountsNumber String required
+accountsBalance String required
+accountsCurrency Enum required
+accountsLinks String required
+accountsLinksDetail String required
+accountFormatsIban String required
+accountFormatsCcc String required
+accountUserRole String required
+accountUserRoleCode String required
+accountUserRoleName String required
+accountTransactions String required
+accountTransactionsId String required
+accountTransactionsOperationDate String required
+accountTransactionsValueDate String required
+accountTransactionsAmount String required
+accountTransactionsCurrency String required
+accountTransactionsDescription String required
+accountTransactionsCategory String required
+accountTransactionsCategoryId String required
+accountTransactionsCategoryName String required
+accountTransactionsSubCategory String required
+accountTransactionsSubCategoryId String required
+accountTransactionsSubCategoryName String required
+accountTransactionsClientNotesText String required
+accountTransactionsClientNotesDate String required
+accountTransactionsAttachedInfoName String required
+accountTransactionsAttachedInfoType String required
+accountTransactionsAttachedInfoSize String required
+accountTransactionsAttachedInfoDate String required
+image ImageBlob
+}
+
+enum Currency {
+    Euro, Dolar, Bitcoin, Ethereum, DAI, USDC
+}
+
+
+entity Cards {
+cardsId String required
+cardsAlias String required
+cardsType String required
+cardsOperable String required
+cardsNumber String required
+cardsAvailableBalance String required
+cardsCurrency String required
+cardsStatus String required
+cardsDescription String required
+cardsLinks String required
+cardPan  String required
+cardAvailableBalance  String required
+cardConsolidatedBalance  String required
+cardDisposedAmount  String required
+cardCurrency String required
+cardLimits String required
+cardLimitsAtmDaily String required
+cardLimitsPosDaily String required
+cardLimitsCredit  String required
+cardLimitsMinReload String required
+cardLimitsMaxReload String required
+cardStatus String required
+cardSecurityInformation  String required
+cardSecurityInformationHolderName  String required
+cardSecurityInformationCVV  String required
+cardSecurityInformationExpirationDate  String required
+cardTransactions  String required
+cardTransactionsId  String required
+cardTransactionsDate  String required
+cardTransactionsValueDate  String required
+cardTransactionsAmount  String required
+cardTransactionsCurrency  String required
+cardTransactionsConcept  String required
+cardTransactionsIsVirtualTpv  String required
+cardTransactionsTransactionType  String required
+cardTransactionsShop  String required
+cardTransactionsShopId  String required
+cardTransactionsShopName  String required
+cardTransactionsShopAddress  String required
+cardTransactionsShopCountry  String required
+cardTransactionsShopCategory  String required
+cardTransactionsShopCategoryId  String required
+cardTransactionsShopCategoryName  String required
+cardTransactionsShopSubcategory  String required
+cardTransactionsShopSubcategoryId  String required
+cardTransactionsShopSubcategoryName  String required
+cardTransactionsShopGeolocation String required
+cardTransactionsShopGeolocationLatitude String required
+cardTransactionsShopGeolocationLongitude String required
+cardTransactionsShopGeolocationQuality String required
+cardTransactionsCategory String required
+cardTransactionsCategoryId String required
+cardTransactionsCategoryName String required
+cardTransactionsSubcategory String required
+cardTransactionsSubcategoryId String required
+cardTransactionsSubcategoryName String required
+cardTransactionsClientNotesText String required
+cardTransactionsClientNotesDate String required
+image ImageBlob
+}
+
+entity Product {
+    name String required
+    description String
+    price BigDecimal required min(0)
+    size Size required
+    image ImageBlob
+}enum Size {
+    S, M, L, XL, XXL
+}entity ProductCategory {
+    name String required
+    description String
+}entity Customer {
+    firstName String required
+    lastName String required
+    gender Gender required
+    email String required pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+    phone String required
+    addressLine1 String required
+    addressLine2 String
+    city String required
+    country String required
+}enum Gender {
+    MALE, FEMALE, OTHER
+}entity ProductOrder {
+    placedDate Instant required
+    status OrderStatus required
+    code String required
+    invoiceId Long
+}enum OrderStatus {
+    COMPLETED, PENDING, CANCELLED
+}entity OrderItem {
+    quantity Integer required min(0)
+    totalPrice BigDecimal required min(0)
+    status OrderItemStatus required
+}enum OrderItemStatus {
+    AVAILABLE, OUT_OF_STOCK, BACK_ORDER
+}relationship OneToOne {
+    Customer{user(login) required} to User
+}relationship ManyToOne {
+ OrderItem{product(name) required} to Product
+  ProductOrder{product(name) required} to Invoice
+   ProductOrder{product(name) required} to Notification
+ 
+}relationship OneToMany {
+   Customer{BankAccount} to BankAccount{customer(email) required},
+   Customer{Cards} to Cards{customer(email) required},
+   Customer{order} to ProductOrder{customer(email) required},
+   ProductOrder{orderItem} to OrderItem{order(code) required} ,
+   ProductCategory{product} to Product{productCategory(name)},
+   Customer{Currency} to Currency{ProductOrder(Invoice) required},
+}service Product, ProductCategory, Customer, ProductOrder, OrderItem with serviceClass
+paginate Product, Customer, ProductOrder, OrderItem with pagination/* Entities for Invoice microservice */
+entity Invoice {
+    code String required
+    date Instant required
+    details String
+    status InvoiceStatus required
+    paymentMethod PaymentMethod required
+    paymentDate Instant required
+    paymentAmount BigDecimal required
+}enum InvoiceStatus {
+    PAID, ISSUED, CANCELLED
+}entity Shipment {
+    trackingCode String
+    date Instant required
+    details String
+}enum PaymentMethod {
+    CREDIT_CARD, CASH_ON_DELIVERY, PAYPAL
+}relationship OneToMany {
+    Invoice{shipment} to Shipment{invoice(code) required}
+}service Invoice, Shipment with serviceClass
+paginate Invoice, Shipment with pagination
+microservice Invoice, Shipment with invoice/* Entities for notification microservice */entity Notification {
+    date Instant required
+    details String
+    sentDate Instant required
+    format NotificationType required
+    userId Long required
+    productId Long required
+}enum NotificationType {
+    EMAIL, SMS, PARCEL
+}microservice Notification with notification
